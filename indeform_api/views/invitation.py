@@ -17,10 +17,6 @@ class InvitationsView(generics.ListAPIView):
         return Invitation.objects.filter(receiver=self.request.user)
 
 
-"""
-Accepts the invitationupdate after set to true
-Cannot 
-"""
 class InvitationsAcceptDenyView(APIView):
     permission_classes = [IsAuthenticated, IsInvitationReceiver]
 

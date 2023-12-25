@@ -1,17 +1,19 @@
 import json
-from asgiref.sync import sync_to_async
 
-from channels.auth import login, logout
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
-from django.contrib.auth.models import AnonymousUser, User
-from rest_framework_simplejwt import exceptions
-from rest_framework_simplejwt.tokens import AccessToken, Token
+from django.contrib.auth.models import User
+from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.tokens import AccessToken
 
 from indeform_base.models import CustomUser, ChatRoom
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(args, kwargs)
+        self.room_group_name = None
 
     async def connect(self):
         room_id = self.scope['url_route']['kwargs']['room_id']
@@ -21,21 +23,18 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         try:
             user = await self.get_user_from_token(decoded_token)
+            await self.get_participating_sender_user(room_id, user.id)
         except User.DoesNotExist:
             await self.send({"close": True})
-            return
-
-        try:
-            sender_participant_user = await self.get_participating_sender_user(room_id, user.id)
+        except TokenError:
+            await self.send({"close": True})
         except ChatRoom.DoesNotExist:
             await self.send({"close": True})
         except CustomUser.DoesNotExist:
             await self.send({"close": True})
 
-
         self.room_group_name = f"chat_{room_id}"
 
-        #add websocket connection to channel
         await self.channel_layer.group_add(
             self.room_group_name,
             self.channel_name
@@ -84,9 +83,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         return CustomUser.objects.get(pk=user_id, email=email, username=username)
 
     @database_sync_to_async
-    def get_chatroom(self, chatroom_id):
-        return ChatRoom.objects.get(pk=chatroom_id)
-
-    @database_sync_to_async
     def get_participating_sender_user(self, chatroom_id, sender_user_id):
+        """
+        Check if user is a chatroom participant / Check if Chatroom exists
+        """
         return ChatRoom.objects.get(pk=chatroom_id).participants.get(id=sender_user_id)

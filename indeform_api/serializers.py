@@ -1,13 +1,16 @@
-from rest_framework import serializers # Import the serializer class
+from rest_framework import serializers  # Import the serializer class
 from django.contrib.auth.password_validation import validate_password
-from rest_framework.validators import UniqueValidator # Import the validate_password function
+from rest_framework.validators import UniqueValidator  # Import the validate_password function
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from indeform_base.models import ChatRoom, CustomUser, Invitation # Import the TokenObtainPairSerializer class
+from indeform_base.models import ChatRoom, CustomUser, Invitation  # Import the TokenObtainPairSerializer class
+
+
 class ChatRoomInvitationCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Invitation
         fields = ['id', 'sender', 'receiver', 'chat_room']
+
 
 class ChatRoomCreateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -15,15 +18,19 @@ class ChatRoomCreateSerializer(serializers.ModelSerializer):
         fields = ['id', 'name']
         read_only_fields = ['creator']
 
+
 class ChatRoomSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChatRoom
         fields = ['id', 'name', 'created_at']
 
+
 class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ['id', 'username', 'email']
+
+
 class ChatRoomParticipantsSerializer(serializers.ModelSerializer):
     participants = CustomUserSerializer(many=True)
 
@@ -31,17 +38,21 @@ class ChatRoomParticipantsSerializer(serializers.ModelSerializer):
         model = ChatRoom
         fields = ['participants']
 
+
 class InvitationUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Invitation
         fields = ['id', 'accepted']
 
+
 class InvitationSerializer(serializers.ModelSerializer):
     sender = CustomUserSerializer()
     chat_room = ChatRoomSerializer()
+
     class Meta:
         model = Invitation
         fields = ['id', 'sender', 'accepted', 'chat_room']
+
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
@@ -52,7 +63,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['email'] = user.email
 
         return token
-    
+
 
 class RegisterSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
@@ -78,6 +89,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        user = CustomUser.objects.create_user(validated_data['username'], validated_data['email'], validated_data['password'])
+        user = CustomUser.objects.create_user(validated_data['username'], validated_data['email'],
+                                              validated_data['password'])
 
         return user

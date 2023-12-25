@@ -20,5 +20,5 @@ urlpatterns = [
     path('chatrooms/<int:pk>/participants', ChatRoomParticipantsView.as_view(), name='chatroom_participants'),
     path('chatrooms/<int:pk>/invitations/<int:invitation_pk>', InvitationsAcceptDenyView.as_view(),
          name='chatroom_invitation_accept_deny'),
-    path('invitations', InvitationsView.as_view(), name='invitations'),
+    path('chatrooms/invitations', InvitationsView.as_view(), name='invitations'),
 ]
